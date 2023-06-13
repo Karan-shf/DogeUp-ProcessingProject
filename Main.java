@@ -27,7 +27,7 @@ public class Main extends PApplet {
     public void setup() {
         processing = this;
         Block.CraeteBlocks();
-        human = new Human(mouseX,20,0,255,0);
+        human = new Human(mouseX,20,255,255,255);
     }
     
     @Override
@@ -41,11 +41,11 @@ public class Main extends PApplet {
             case 0:
                 background(0,0,0);
                 stroke(209,59,187);
-                line(0,human.getHumanY()+(human.getExtent()/2),400,human.getHumanY()+(human.getExtent()/2));
+                line(0,human.getHumanY()+(human.getHeadExtent()/2),400,human.getHumanY()+(human.getHeadExtent()/2));
                 for (Block block : GameBlocks) {
-                    // ShowBlock(block.getBlockX(),block.getBlockY(),block.getR(),block.getG(),block.getB());
+                   
                     block.showObject();
-                    if (block.getBlockY()>human.getHumanY()+(human.getExtent()/2) && !block.scored) {
+                    if (block.getBlockY()>human.getHumanY()+(human.getHeadExtent()/2) && !block.scored) {
                         if (GameSpeed>7.5) {
                             GameScore+=4;
                         } else if (GameSpeed>2.5) {
@@ -63,7 +63,7 @@ public class Main extends PApplet {
                 MoveBlocks();
                 human.setHumanX(mouseX);
                 human.showObject();
-                // ShowHuman(human.getHumanY(), human.getExtent(), human.getR(), human.getG(), human.getB());
+               
                 checkMousePress();
                 CheckGameCondition();
                 fill(26, 9, 176);
@@ -71,14 +71,14 @@ public class Main extends PApplet {
                 text("Lifes: "+Lifes,30,70);
                 PrintGameSpeed();
                 changeHumanColor();
-                // System.out.println(GameScore);
+                
                 break;
             case -1:
-                // System.out.println("you lost for some reason");
+            
                 GameOver();
                 break;
             case 1:
-                // System.out.println("you won!!!");
+                
                 GameWon();
                 break;    
         }
@@ -90,25 +90,34 @@ public class Main extends PApplet {
         }
     }
 
-    // public void ShowBlock(int x,int y,int R, int G,int B){
-    //     fill(R, G, B);
-    //     noStroke();
-    //     rect(x,y,Block.getBlockWidth(),Block.getBlockHeight());
-    // }
-
-    // public void ShowHuman(int y,int extent,int R, int G,int B) {
-    //     fill(R, G, B);
-    //     noStroke();
-    //     // circle(mouseX, y, extent);
-    //     ellipse(mouseX, y, extent, extent);
-    // }
-
     public void CheckGameCondition(){
         boolean checkGameBlocks = true;
         for (Block block : GameBlocks) {
 
-            if (mouseX+(human.getExtent()/2)>block.getBlockX() && mouseX-(human.getExtent()/2)<block.getBlockX()+Block.getBlockWidth()
-             && human.getHumanY()+(human.getExtent()/2)>block.getBlockY() && human.getHumanY()-(human.getExtent()/2)<block.getBlockY()+Block.getBlockHeight()) {
+            //check head crash
+            if (human.getHumanX()+(human.getHeadExtent()/2)>block.getBlockX() && human.getHumanX()-(human.getHeadExtent()/2)<block.getBlockX()+Block.getBlockWidth()
+             && human.getHeadY()+(human.getHeadExtent()/2)>block.getBlockY() && human.getHeadY()-(human.getHeadExtent()/2)<block.getBlockY()+Block.getBlockHeight()) {
+                if (!block.killed) { 
+                    if (block.getR()==250) {
+                        Lifes--;
+                        background(250,0,0);
+                        GameScore -= 50;
+                    } else {
+                        Lifes -= 2;
+                        background(250,0,0);
+                        GameScore -= 75;
+                    }
+
+                    block.killed=true;
+                }
+                if (Lifes<=0) {
+                    GameCondition = -1;
+                }
+            }
+
+            //check body crash
+            if ((human.getHumanX()-10)+20>block.getBlockX() && human.getHumanX()-10<block.getBlockX()+Block.getBlockWidth()
+             && (615+25)>block.getBlockY() && 615<block.getBlockY()+Block.getBlockHeight()) {
                 if (!block.killed) { 
                     if (block.getR()==250) {
                         Lifes--;
@@ -144,11 +153,7 @@ public class Main extends PApplet {
 
             if (mouseButton==LEFT) {
                 if (GameSpeed<8) {
-                //     if (GameSpeed==2.5) {
-                //         GameSpeed=5;
-                //     } else if (GameSpeed==5) {
-                //         GameSpeed=(float) 7.5;
-                //     }
+
                     GameSpeed+=0.5;
                 }
             }
@@ -174,13 +179,7 @@ public class Main extends PApplet {
     public void GameWon() {
 
         ArrayList<Integer> highscores = CheckHighScore();
-        // highscores.sort(null);
-        // for (int i:highscores) {
-        //     System.out.println(i);
-        // }
-        // System.out.println("----------------");
-
-        
+       
         background(0,0,0);
         if (GameScore>=highscores.get(0)){
             fill(181, 24, 31);
@@ -205,7 +204,7 @@ public class Main extends PApplet {
                 preparedStatement.setInt(1, GameScore);
                 preparedStatement.executeUpdate();
                 connection.close();
-                // System.out.println("table updated succesfully");
+               
                 savedInDatabase = true;
             } catch (Exception e) {
                 e.printStackTrace();
@@ -257,18 +256,36 @@ public class Main extends PApplet {
 
     public void changeHumanColor(){
 
-        if (Lifes==5) {
-            human.setRGB(79, 245, 2);
-        } else if (Lifes==4) {
-            human.setRGB(65, 186, 9);
-        } else if (Lifes==3) {
-            human.setRGB(52, 138, 12);
-        } else if (Lifes==2) {
-            human.setRGB(34, 92, 6);
-        } else if (Lifes==1) {
-            human.setRGB(19, 54, 2);
-        } 
-            
+        // if (Lifes==5) {
+        //     human.setHeadRGB(255,255,255);
+        // } else if (Lifes==4) {
+        //     human.setHeadRGB(149, 230, 155);
+        // } else if (Lifes==3) {
+        //     human.setHeadRGB(127, 227, 134);
+        // } else if (Lifes==2) {
+        //     human.setHeadRGB(95, 227, 105);
+        // } else if (Lifes==1) {
+        //     human.setHeadRGB(32, 227, 47);
+        // }
+
+        switch (Lifes) {
+            case 5:
+                human.setHeadRGB(255,255,255);
+                break;
+            case 4:
+                human.setHeadRGB(149, 230, 155);
+                break;
+            case 3:
+                human.setHeadRGB(127, 227, 134);
+                break;
+            case 2:
+                human.setHeadRGB(95, 227, 105);
+                break;
+            case 1:
+                human.setHeadRGB(32, 227, 47);
+                break;
+        }
+           
     }
     
 }
